@@ -1,13 +1,11 @@
 #!/bin/bash
 
 # Setup script for the Kali attacker machine
-# This needs to be in your GitHub repository
 
 # Create the scan-utilities.sh file
 cat > /home/kali/scan-utilities.sh << 'EOF'
 #!/bin/bash
 
-# Enhanced network scanning utilities for Firewall Evasion Lab
 
 function enhanced_nmap() {
     # Check which scan type is being used
