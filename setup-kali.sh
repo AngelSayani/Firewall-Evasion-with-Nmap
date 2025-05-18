@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # Setup script for the Kali attacker machine
+
+# Create a script that will replace nmap and tcpdump
 cat > /home/kali/commands.sh << 'EOF'
 #!/bin/bash
 
+# Store predefined outputs for specific commands
 declare -A NMAP_OUTPUTS
 NMAP_OUTPUTS["sudo nmap -sT 10.0.0.10"]="Starting Nmap 7.95 ( https://nmap.org ) at $(date +'%Y-%m-%d %H:%M') UTC
 Nmap scan report for 10.0.0.10
