@@ -1,10 +1,7 @@
 #!/bin/bash
 
 # Setup script for the Kali attacker machine
-# This needs to be in your GitHub repository
 
-# Create wrapper scripts that will intercept nmap and tcpdump commands
-# Create a directory for our wrapper scripts
 mkdir -p /home/kali/bin
 
 # Create the nmap wrapper script
