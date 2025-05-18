@@ -43,21 +43,37 @@ PORT     STATE         SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 5.64 seconds
 EOF
 
+# Update the NULL scan (-sN) to show a unique set of filtered ports
+cat > /home/kali/mock_outputs/sN.txt << 'EOF'
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
+Nmap scan report for 10.0.0.10
+Host is up (0.00044s latency).
+Not shown: 996 filtered tcp ports
+PORT     STATE         SERVICE
+21/tcp   open|filtered ftp
+80/tcp   open|filtered http
+8080/tcp open|filtered http-proxy
+22/tcp   open          ssh
+
+Nmap done: 1 IP address (1 host up) scanned in 5.64 seconds
+EOF
+
+# Update the FIN scan (-sF) to show a different set of filtered ports
 cat > /home/kali/mock_outputs/sF.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
 Nmap scan report for 10.0.0.10
 Host is up (0.00039s latency).
-Not shown: 995 filtered tcp ports
+Not shown: 996 filtered tcp ports
 PORT     STATE         SERVICE
 21/tcp   open|filtered ftp
 80/tcp   open|filtered http
 443/tcp  open|filtered https
-8000/tcp open|filtered http-alt
 22/tcp   open          ssh
 
 Nmap done: 1 IP address (1 host up) scanned in 5.53 seconds
 EOF
 
+# Update the Xmas scan (-sX) to show yet another set of filtered ports
 cat > /home/kali/mock_outputs/sX.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
 Nmap scan report for 10.0.0.10
@@ -66,8 +82,8 @@ Not shown: 995 filtered tcp ports
 PORT     STATE         SERVICE
 21/tcp   open|filtered ftp
 80/tcp   open|filtered http
-8080/tcp open|filtered http-proxy
 443/tcp  open|filtered https
+8000/tcp open|filtered http-alt
 22/tcp   open          ssh
 
 Nmap done: 1 IP address (1 host up) scanned in 5.58 seconds
