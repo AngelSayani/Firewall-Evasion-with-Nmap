@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# setup-kali.sh - This will set up the mock environment
-
-# Create a directory for mock outputs
+# setup-kali.sh 
 mkdir -p /home/kali/mock_outputs
 
-# Create mock output files for each command
 cat > /home/kali/mock_outputs/sT.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:14 UTC
 Nmap scan report for 10.0.0.10
@@ -32,22 +29,6 @@ cat > /home/kali/mock_outputs/sN.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
 Nmap scan report for 10.0.0.10
 Host is up (0.00044s latency).
-Not shown: 995 filtered tcp ports
-PORT     STATE         SERVICE
-21/tcp   open|filtered ftp
-80/tcp   open|filtered http
-8080/tcp open|filtered http-proxy
-8000/tcp open|filtered http-alt
-22/tcp   open          ssh
-
-Nmap done: 1 IP address (1 host up) scanned in 5.64 seconds
-EOF
-
-# Update the NULL scan (-sN) to show a unique set of filtered ports
-cat > /home/kali/mock_outputs/sN.txt << 'EOF'
-Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
-Nmap scan report for 10.0.0.10
-Host is up (0.00044s latency).
 Not shown: 996 filtered tcp ports
 PORT     STATE         SERVICE
 21/tcp   open|filtered ftp
@@ -58,7 +39,6 @@ PORT     STATE         SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 5.64 seconds
 EOF
 
-# Update the FIN scan (-sF) to show a different set of filtered ports
 cat > /home/kali/mock_outputs/sF.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
 Nmap scan report for 10.0.0.10
@@ -73,7 +53,6 @@ PORT     STATE         SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 5.53 seconds
 EOF
 
-# Update the Xmas scan (-sX) to show yet another set of filtered ports
 cat > /home/kali/mock_outputs/sX.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:15 UTC
 Nmap scan report for 10.0.0.10
@@ -160,7 +139,7 @@ PORT     STATE SERVICE
 22/tcp   open  ssh
 80/tcp   open  http
 443/tcp  open  https
-7777/tcp open  cbt
+8080/tcp open  http-proxy
 
 Nmap done: 1 IP address (1 host up) scanned in 7.12 seconds
 EOF
@@ -169,7 +148,7 @@ cat > /home/kali/mock_outputs/combined.txt << 'EOF'
 Starting Nmap 7.95 ( https://nmap.org ) at 2025-05-18 08:26 UTC
 Nmap scan report for 10.0.0.10
 Host is up (0.00036s latency).
-Not shown: 991 filtered tcp ports
+Not shown: 992 filtered tcp ports
 PORT     STATE SERVICE
 21/tcp   open  ftp
 22/tcp   open  ssh
@@ -178,7 +157,6 @@ PORT     STATE SERVICE
 3306/tcp open  mysql
 5432/tcp open  postgresql
 6379/tcp open  redis
-7777/tcp open  cbt
 8080/tcp open  http-proxy
 
 Nmap done: 1 IP address (1 host up) scanned in 8.14 seconds
@@ -271,7 +249,6 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 0 packets dropped by kernel
 EOF
 
-# Create a simple interactive script that will handle all commands
 cat > /home/kali/command_handler.py << 'EOF'
 #!/usr/bin/env python3
 import os
@@ -330,60 +307,75 @@ def main():
             sys.stdout.flush()
             
             # Get user input
-            command = input()
-            simplified_command = simplify_command(command)
+            command_line = input()
             
-            # Special case for exit
-            if command.lower() in ["exit", "quit", "logout"]:
-                break
+            # Split into multiple commands if present
+            commands = command_line.split('sudo')
+            
+            # Process each command
+            for i, cmd in enumerate(commands):
+                if i > 0:  # Add 'sudo' back except for the first empty element
+                    cmd = 'sudo' + cmd
                 
-            # Special case for exec bash - restart the script
-            if command.lower() == "exec bash":
-                print("Reloading shell...")
-                os.execl(sys.executable, sys.executable, *sys.argv)
+                cmd = cmd.strip()
+                if not cmd:
+                    continue
                 
-            # Check if it's a nmap or tcpdump command
-            is_nmap_or_tcpdump = False
-            for key in COMMAND_MAPPINGS:
-                # Exact match
-                if simplified_command == key:
-                    output_file = COMMAND_MAPPINGS[key]
-                    is_nmap_or_tcpdump = True
-                    break
+                simplified_command = simplify_command(cmd)
+                
+                # Special case for exit
+                if cmd.lower() in ["exit", "quit", "logout"]:
+                    sys.exit(0)
                     
-                # Check for supported output formats
-                if simplified_command.startswith(key + " -oN "):
-                    output_file = COMMAND_MAPPINGS[key]
-                    is_nmap_or_tcpdump = True
-                    break
-            
-            # If it's a nmap or tcpdump command, display the mock output
-            if is_nmap_or_tcpdump:
-                # If it's tcpdump, display a single line at a time with delay
-                if "tcpdump" in simplified_command:
-                    with open(f"/home/kali/mock_outputs/{output_file}", "r") as f:
-                        lines = f.readlines()
-                        for line in lines:
-                            print(line.strip())
-                            if "^C" not in line:  # Don't wait after the last line
-                                time.sleep(0.2)
-                else:
-                    # For nmap commands, show all at once
-                    with open(f"/home/kali/mock_outputs/{output_file}", "r") as f:
-                        content = f.read()
-                        print(content)
+                # Special case for exec bash - restart the script
+                if cmd.lower() == "exec bash":
+                    print("Reloading shell...")
+                    os.execl(sys.executable, sys.executable, *sys.argv)
+                    
+                # Check if it's a nmap or tcpdump command
+                is_nmap_or_tcpdump = False
+                output_file = None
+                
+                for key in COMMAND_MAPPINGS:
+                    # Exact match
+                    if simplified_command == key:
+                        output_file = COMMAND_MAPPINGS[key]
+                        is_nmap_or_tcpdump = True
+                        break
                         
-                    # If -oN option is used, save to the specified file
-                    if " -oN " in simplified_command:
-                        output_path = simplified_command.split(" -oN ")[1].split()[0]
-                        with open(output_path, "w") as f:
-                            f.write(content)
-            else:
-                # Execute the real command
-                try:
-                    subprocess.run(command, shell=True)
-                except Exception as e:
-                    print(f"Error executing command: {e}")
+                    # Check for supported output formats
+                    if simplified_command.startswith(key + " -oN "):
+                        output_file = COMMAND_MAPPINGS[key]
+                        is_nmap_or_tcpdump = True
+                        break
+                
+                # If it's a nmap or tcpdump command, display the mock output
+                if is_nmap_or_tcpdump and output_file:
+                    # If it's tcpdump, display a single line at a time with delay
+                    if "tcpdump" in simplified_command:
+                        with open(f"/home/kali/mock_outputs/{output_file}", "r") as f:
+                            lines = f.readlines()
+                            for line in lines:
+                                print(line.strip())
+                                if "^C" not in line:  # Don't wait after the last line
+                                    time.sleep(0.2)
+                    else:
+                        # For nmap commands, show all at once
+                        with open(f"/home/kali/mock_outputs/{output_file}", "r") as f:
+                            content = f.read()
+                            print(content)
+                            
+                        # If -oN option is used, save to the specified file
+                        if " -oN " in simplified_command:
+                            output_path = simplified_command.split(" -oN ")[1].split()[0]
+                            with open(output_path, "w") as f:
+                                f.write(content)
+                else:
+                    # Execute the real command
+                    try:
+                        subprocess.run(cmd, shell=True)
+                    except Exception as e:
+                        print(f"Error executing command: {e}")
                 
         except KeyboardInterrupt:
             print("\nInterrupted. Use 'exit' to quit.")
@@ -398,7 +390,6 @@ EOF
 
 chmod +x /home/kali/command_handler.py
 
-# Create a custom .bashrc that will run our command handler
 cat > /home/kali/custom_bashrc << 'EOF'
 # This is a custom .bashrc file that launches our lab environment
 /home/kali/command_handler.py
